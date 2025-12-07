@@ -63,7 +63,7 @@ class UserController extends Controller
         $users = User::all();
         foreach ($users as $u) {
             if (Hash::check($validated['password'], $u->password)) {
-                return response()->json(['error' => 'Password already used by another user'], 400);
+                return response()->json(['error' => 'Password or email already used by another user'], 400);
             }
         }
 
@@ -127,8 +127,94 @@ class UserController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function get_all_admin(Request $request)
     {
-        //
+        // if (!$request->user()->tokenCan('admin')) {
+        //     abort(403);
+        // }  for staus not define gate in  app/providers/AppServiceProvider funtion boot
+        $user = $request->user();
+
+        $admins = User::where('role','admin')->get();
+
+        $admins = json_encode($admins, JSON_PRETTY_PRINT);
+
+        return response()->json($admins);
+    }
+
+    public function add_admin(Request $request){
+
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:8',
+        ]);
+
+        $users = User::where('role','admin')->get();
+        foreach ($users as $u) {
+            if (Hash::check($validated['password'], $u->password)) {
+                return response()->json(['error' => 'Password or email already used by another user'], 400);
+            }
+        }
+
+        $users = User::where('role','admin')->get();
+        foreach ($users as $u) {
+            if ($validated['email'] ===  $u->email){
+                return response()->json(['error' => 'Password or email already used by another user'], 400);
+            }
+        }
+
+        $validated['password'] = Hash::make($validated['password']);
+        $validated['role'] = 'admin';
+        User::create($validated);
+        
+        return response()->json(['message'=>'admin is added'],201);
+    }
+
+    public function remove_admin(Request $request){
+        $validated = $request->validate([
+            'id'     => 'required',
+        ]);
+        $admin = User::find($validated['id']);
+        if(!$admin){
+            return response()->json(['error'=>'user not found'],404);
+        }
+        $admin->delete();
+
+        return response()->json(['message'=>'admin is removed'],201);
+    }
+
+    public function  update_admin(Request $request,$id) {
+        $validated = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users,email',
+            'password' => 'required|min:8',
+        ]);
+
+        $user = User::where('role','admin')->where('id',$id)->first();
+
+        if(!$user){
+            return response()->json(['error'=>'not found'],404);
+        }
+
+        $users = User::where('role','admin')->get();
+        foreach ($users as $u) {
+            if (Hash::check($validated['password'], $u->password)) {
+                return response()->json(['error' => 'Password already used by another user'], 400);
+            }
+        }
+
+        $users = User::where('role','admin')->get();
+        foreach ($users as $u) {
+            if ($validated['email'] ===  $u->email){
+                return response()->json(['error' => 'Password or email already used by another user'], 400);
+            }
+        }
+
+        $validated['password'] = Hash::make($validated['password']);
+        $validated['role'] = 'admin';
+        User::update($validated);
+
+        return response()->json(['message'=>'admin is updated'],201);
+
     }
 }
