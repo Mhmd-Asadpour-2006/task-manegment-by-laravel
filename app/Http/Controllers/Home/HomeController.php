@@ -8,6 +8,7 @@ use App\Models\Tasks;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Validation\Rules\Can;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -44,9 +45,9 @@ class HomeController extends Controller
             'body' => '',
             'priority' => 'required|in:1,2,3',
             'status'=>'required|in:Published,archived',
-            'date_of_completion' => 'nullable|date',
+            'date_of_completion' => 'nullable|date|after_or_equal:today',
             'assignees_emails' => 'nullable|array',
-            'category'=>'required|min:3'
+            'category'=>'required'
         ]);
 
         $task = Tasks::create($validated);
@@ -55,7 +56,7 @@ class HomeController extends Controller
 
         $user->tasks()->attach($task->id);
 
-        $category = Categories::where('user_id', $user->id)->where('title', $validated['category'])->first();
+        $category = Categories::where('user_id', $user->id)->where('id', $validated['category'])->first();
         if(!$category){
             $category->tasks()->attach($task->id);
         }
@@ -73,13 +74,82 @@ class HomeController extends Controller
 
     }
 
-    public function remove_task()  {
+    public function remove_task(Request $request)  {
+                
+        $user = $request->user();
         
+        $validated = $request->validate([
+            'task_id'=>'required',
+        ]);
+
+        $task = Tasks::where('id',$validated['task_id'])->first();
+
+        if(!$task){
+            return response()->json(['error'=>'task not found'],404);
+        }
+
+        $task->users()->detach([$user->id]);
+
+        
+
+        $task->delete();
     }
 
-     public function update_task()  {
-        
+    public function update_task(Request $request, $task_id)  {
+
+        $validated = $request->validate([
+            'title'    => 'required|min:3',
+            'body' => 'nullable',
+            'priority' => 'required|in:1,2,3',
+            'status'=>'required|in:Published,archived',
+            'date_of_completion' => 'nullable|date|after_or_equal:today',
+            'assignees_emails' => 'nullable|array',
+            'category'=>'required|exists:categories,id'
+        ]);
+
+        $task = Tasks::find($task_id);
+
+        $user = $request->user();
+
+        $task->users()->syncWithoutDetaching([$user->id]);
+
+
+        if(!$task){
+            return response()->json(['error'=>'task not found'],404);
+        }
+
+        $category = Categories::where('user_id', $user->id)
+                          ->where('id', $validated['category'])
+                          ->first();
+
+        if(!$category){                  
+            // if (!$category->tasks()->where('id', $task->id)->exists()) {
+            //     $category->tasks()->attach($task->id);
+            // }
+            return response()->json(['error'=>'category not found'],404);
+        }
+
+        $task->update([
+            'title' => $validated['title'],
+            'body' => $validated['body'] ?? null,
+            'priority' => $validated['priority'],
+            'status' => $validated['status'],
+            'date_of_completion' => $validated['date_of_completion'] ?? null,
+            'category' => $validated['category'] 
+        ]);
+
+        if (!empty($validated['assignees_emails'])) {
+            $assignees = User::whereIn('email', $validated['assignees_emails'])->pluck('id')->toArray();
+            $task->users()->syncWithoutDetaching($assignees);
+        }
+
+        return response()->json([
+            'message' => 'Task updated successfully.',
+            'task' => $task
+        ]);
+
     }
+
 
     /**
      * Display the specified resource.

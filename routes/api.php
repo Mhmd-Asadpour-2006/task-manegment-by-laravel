@@ -11,7 +11,7 @@ Route::middleware('auth:sanctum')->post('/task/add',[HomeController::class,'add_
 
 Route::middleware('auth:sanctum')->post('/task/remove',[HomeController::class,'remove_task']);
 
-Route::middleware('auth:sanctum')->post('/task/update',[HomeController::class,'update_task']);
+Route::middleware('auth:sanctum')->post('/task/update/{task_id}',[HomeController::class,'update_task']);
 
 Route::middleware('auth:sanctum')->post('/category/add', [HomeController::class,'add_category']);
 
@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->post('/category/update', [HomeController::cla
 Route::prefix('admin')->group(function (){
     
     Route::post('/',[UserController::class,'admin_login']);
+    // Route::post('/register',[UserController::class,'admin_register']);
 
     Route::middleware(['auth:sanctum','can:admin'])->get('/getAdmins',[UserController::class,'get_all_admin']);
 

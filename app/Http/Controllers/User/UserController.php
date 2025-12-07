@@ -112,10 +112,17 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+    // public function admin_register(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'name'     => 'required|string|max:255',
+    //         'email'    => 'required|email|unique:users,email',
+    //         'password' => 'required|min:8',
+    //     ]);
+
+    //     $validated['password'] = Hash::make($validated['password']);
+    //     User::create($validated);
+    // }
 
     /**
      * Remove the specified resource from storage.

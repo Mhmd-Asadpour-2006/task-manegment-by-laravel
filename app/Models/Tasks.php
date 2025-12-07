@@ -17,7 +17,8 @@ class Tasks extends Model
         'body',
         'priority',
         'date_of_completion',
-        'status'
+        'status',
+        'category'
     ];
 
     public function users()
