@@ -30,7 +30,7 @@ Route::prefix('admin')->group(function (){
 
     Route::middleware(['auth:sanctum','can:admin'])->post('/remove',[UserController::class,'remove_admin']);
 
-    Route::middleware(['auth:sanctum','can:admin'])->post('/update/{id}',[UserController::class,'update_admin']);
+    Route::middleware(['auth:sanctum','can:admin'])->post('/update',[UserController::class,'update_admin']);
 
     Route::middleware(['auth:sanctum','can:admin'])->get('/getUsers',[UserController::class,'get_all_user_admin']);
 
