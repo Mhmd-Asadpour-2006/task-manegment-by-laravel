@@ -90,8 +90,6 @@ class HomeController extends Controller
 
         $task->users()->detach([$user->id]);
 
-        
-
         $task->delete();
     }
 
@@ -138,10 +136,15 @@ class HomeController extends Controller
             'category' => $validated['category'] 
         ]);
 
+        $mainUserId = intval($user->id);
+        $assignees = [];
         if (!empty($validated['assignees_emails'])) {
             $assignees = User::whereIn('email', $validated['assignees_emails'])->pluck('id')->toArray();
-            $task->users()->syncWithoutDetaching($assignees);
         }
+
+        $syncList = array_unique(array_merge([$mainUserId], $assignees));
+
+        $task->users()->sync($syncList);
 
         return response()->json([
             'message' => 'Task updated successfully.',
