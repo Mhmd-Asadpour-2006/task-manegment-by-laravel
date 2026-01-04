@@ -7,11 +7,15 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:sanctum')->get('/', [HomeController::class,'index']);
 
-Route::middleware('auth:sanctum')->post('/task/add',[HomeController::class,'add_task']);
+Route::prefix('task')->group(function (){
 
-Route::middleware('auth:sanctum')->post('/task/remove',[HomeController::class,'remove_task']);
+    Route::middleware('auth:sanctum')->post('/add',[HomeController::class,'add_task']);
 
-Route::middleware('auth:sanctum')->post('/task/update/{task_id}',[HomeController::class,'update_task']);
+    Route::middleware('auth:sanctum')->post('/remove',[HomeController::class,'remove_task']);
+
+    Route::middleware('auth:sanctum')->post('/update/{task_id}',[HomeController::class,'update_task']);
+
+});
 
 Route::middleware('auth:sanctum')->post('/category/add', [HomeController::class,'add_category']);
 
